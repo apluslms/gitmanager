@@ -370,6 +370,8 @@ class Module(Parent):
     late_penalty: NotRequired[Float0to1]
     late_duration: NotRequired[AnyDuration]
     numerate_ignoring_modules: NotRequired[bool]
+    model_answer: NotRequired[str]
+    reveal_module_model_solution: NotRequired[RevealRuleOptions]
 
     @root_validator(allow_reuse=True, pre=True)
     def name_or_title(cls, values: Dict[str, Any]):
