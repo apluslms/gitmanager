@@ -2,6 +2,7 @@ from itertools import chain
 import json
 from json.decoder import JSONDecodeError
 import logging
+import os
 from pathlib import Path
 from tempfile import TemporaryFile
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
@@ -9,6 +10,7 @@ from tarfile import PAX_FORMAT, TarFile
 
 from aplus_auth.payload import Permission, Permissions
 from aplus_auth.requests import RemoteTokenError, Session
+from django.conf import settings
 from requests.models import Response
 from requests.packages.urllib3.util.retry import Retry
 from requests.sessions import HTTPAdapter
@@ -148,12 +150,20 @@ def configure_graders(config: CourseConfig) -> Tuple[Dict[str, Any], List[Union[
                 "files": list(exercise.configure.files.keys()),
             })
 
+        personalized_exercises_path = os.path.join(config.dir, settings.PERSONALIZED_CONTENT_DIR)
+        personalized_exercises_path_exists = os.path.isdir(personalized_exercises_path)
         files = chain.from_iterable((
             course_files.items(),
             *(
                 exercise.configure.files.items()
                 for exercise in exercises
-            )
+            ),
+            [
+                (
+                    settings.PERSONALIZED_CONTENT_DIR,
+                    settings.PERSONALIZED_CONTENT_DIR
+                )
+            ] if personalized_exercises_path_exists else [],
         ))
 
         response, error = configure_url(url, course_id, course_key, config.dir, files, course_spec=course_spec, exercises=exercise_data, version_id=config.version_id)

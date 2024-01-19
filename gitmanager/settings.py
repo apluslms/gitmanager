@@ -206,6 +206,10 @@ APLUS_JSON_FILELOCK_TIMEOUT = 30
 # Extra options applied to all git commands
 GIT_OPTIONS = []
 
+# Personalized exercises are kept in this directory (relative to the course git repository root).
+# This value should be identical to the value of settings.PERSONALIZED_CONTENT_DIR in MOOC-Grader.
+PERSONALIZED_CONTENT_DIR = 'personalized_exercises'
+
 # Location of test files
 TESTDATADIR = "test_data"
 
