@@ -169,6 +169,13 @@ DATABASES = {
 #SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 ##########################################################################
 
+# pymemcache's RetryingClient configuration options
+# https://pymemcache.readthedocs.io/en/latest/apidoc/pymemcache.client.retrying.html
+RETRYING_MEMCACHE_CLIENT_OPTIONS = {
+    'attempts': 10,
+    'retry_delay': 3,
+}
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
 LANGUAGE_CODE = 'en-us'
