@@ -5,40 +5,40 @@
 
 {% block error %}
 {% if error %}
-	<div class="alert alert-danger" role="alert">
-		{{ error }}
-	</div>
+<div class="alert alert-danger" role="alert">
+    {{ error }}
+</div>
 {% endif %}
 {% endblock %}
 
-{% block heading %}{{ course_name }}{% endblock %}
+{% block heading %}
+<div class="d-flex align-items-center">
+    <span>{{ course_name }}</span>
+    <a href="{% url 'index' %}" class="btn btn-outline-secondary text-nowrap mx-4 mt-2">Back to index</a>
+</div>
+{% endblock %}
 
 {% block body %}
 <h3>{% trans "SERVICE_URLS_FOR_A+" %}</h3>
-<table class="table">
-  <tr>
-    <td>{% trans "A+_CONFIGURATION_JSON" %}</td>
-    <td>
-      <a href="{{ plus_config_url }}">
-        {{ plus_config_url }}
-      </a>
-    </td>
-  </tr>
-  <tr>
-    <td>{% trans "BUILD/MAKE_OUTPUT_RETRIEVAL" %}</td>
-    <td>
-      <a href="{{ build_log_url }}">
-        {{ build_log_url }}
-      </a>
-    </td>
-  </tr>
-</table>
+<div class="mb-3">
+    <div class="input-group mb-2">
+        <span class="input-group-text" id="plus_config_url" style="width: 280px;">{% trans "A+_CONFIGURATION_JSON" %}</span>
+        <input type="text" class="form-control" value="{{ plus_config_url }}" aria-label="A+ configuration JSON"
+            aria-describedby="plus_config_url" disabled>
+    </div>
+    <div class="input-group">
+        <span class="input-group-text" id="build_log_url" style="width: 280px;">{% trans "BUILD/MAKE_OUTPUT_RETRIEVAL" %}</span>
+        <input type="text" class="form-control" value="{{ build_log_url }}" aria-label="Build log URL"
+            aria-describedby="build_log_url" disabled>
+    </div>
+</div>
+
 <h3>{% trans "AVAILABLE_EXERCISES" %}</h3>
 <div class="list-group">
-	{% for exercise in exercises %}
-	<p class="list-group-item">
-		{{ exercise.title }}
-  </p>
-	{% endfor %}
+    {% for exercise in exercises %}
+    <p class="list-group-item bg-body-tertiary m-0">
+        {{ exercise.title }}
+    </p>
+    {% endfor %}
 </div>
 {% endblock %}

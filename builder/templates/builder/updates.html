@@ -1,80 +1,136 @@
 {% extends 'gitmanager_frame.html' %}
 {% load i18n %}
 
-{% block title %}{{ block.super }} :: Manager, Updates {{ course.key }}{% endblock %}
+{% block title %}{{ block.super }} :: Manager, Updates {{ course.key }}{% endblock %}
 
-{% block heading %}Update {{ course.key }}{% endblock %}
+{% block heading %}
+<div class="d-flex align-items-center">
+	<span>Update {{ course.key }}</span>
+	<a href="{% url 'manager-courses' %}" class="btn btn-outline-secondary text-nowrap mx-4 mt-2">Back to courses</a>
+</div>
+{% endblock %}
 
 {% block body %}
-{% if has_write_access %}
-<table>
-	<tr>
-		<td style="padding-right: 10px;">
-			<label>Webhook secret</label>
-		</td>
-		<td><input type="text" class="form-control" value="{{ course.webhook_secret }}" size="60" readonly=""></td>
-	</tr>
-	<tr>
-		<td style="padding-right: 10px;">
-			<label>Remote id</label>
-		</td>
-		<td><input type="text" class="form-control" value="{{ course.remote_id }}" size="60" readonly=""></td>
-	</tr>
-	<tr>
-		<td style="padding-right: 10px;">
-			<label>{% trans "A+_CONFIGURATION_JSON" %}</label>
-		</td>
-		<td><input type="text" class="form-control" value="{{ aplus_json_url }}" size="60" readonly=""></td>
-	</tr>
-</table>
-{% endif %}
-<p>
-	Origin: {{course.git_origin }} {{ course.git_branch }}
-	{% if course.update_hook %}
-	<br />Hooks forward: {{ course.update_hook }}
-	{% endif %}
-</p>
-<p>
-<form method="post" action="{% url 'manager-git-hook' course.key %}" class="form-inline">
-	<div class="form-group">
-		<label>Hook</label>
-		<input type="text" class="form-control" value="{{ hook }}" size="60" readonly>
-		<input type="submit" value="Trigger" class="btn btn-default btn-md">
-		<br>
-		Build image <input type="text"  name="build_image" value="" size="20">
-		Build command <input type="text"  name="build_command" value="" size="20">
-		Skip git <input type="checkbox" name="skip_git">
-		Skip build <input type="checkbox" name="skip_build">
-		Skip automatic update <input type="checkbox" name="skip_notify">
-		Set CHANGED_FILES to * <input type="checkbox" name="rebuild_all">
+<div class="card mb-4 w-50" style="min-width: fit-content;">
+	<div class="card-body">
+		{% if has_write_access %}
+		<div class="input-group mb-2">
+			<span class="input-group-text" id="webhook_secret" style="width: 200px;">Webhook secret</span>
+			<input type="text" class="form-control" value="{{ course.webhook_secret }}" aria-label="Webhook secret" aria-describedby="webhook_secret" disabled>
+		</div>
+		<div class="input-group mb-2">
+			<span class="input-group-text" id="remote_id" style="width: 200px;">Remote id</span>
+			<input type="text" class="form-control" value="{{ course.remote_id }}" aria-label="Remote id" aria-describedby="remote_id" disabled>
+		</div>
+		<div class="input-group mb-2">
+			<span class="input-group-text" id="aplus_json_url" style="width: 200px;">A+ configuration JSON</span>
+			<input type="text" class="form-control" value="{{ aplus_json_url }}" aria-label="A+ configuration JSON" aria-describedby="aplus_json_url" disabled>
+		</div>
+		{% endif %}
+		<div class="input-group mb-2">
+			<span class="input-group-text" id="git_origin" style="width: 200px;">Origin</span>
+			<input type="text" class="form-control" value="{{ course.git_origin }}" aria-label="Origin" aria-describedby="git_origin" disabled>
+		</div>
+		<div class="input-group mb-2">
+			<span class="input-group-text" id="git_branch" style="width: 200px;">Branch</span>
+			<input type="text" class="form-control" value="{{ course.git_branch }}" aria-label="Branch" aria-describedby="git_branch" disabled>
+		</div>
+		{% if course.update_hook %}
+		<div class="input-group mb-2">
+			<span class="input-group-text" id="hooks_forward" style="width: 200px;">Hooks forward</span>
+			<input type="text" class="form-control" value="{{ course.update_hook }}" aria-label="Hooks forward" aria-describedby="hooks_forward" disabled>
+		</div>
+		<hr style="color: var(--bs-secondary-bg); opacity: 1.0;"/>
+		{% endif %}
+		<form method="post" action="{% url 'manager-git-hook' course.key %}" class="form-inline">
+			<div>
+				<div class="input-group mb-2 mt-2">
+					<span class="input-group-text" id="build_image" style="width: 200px;">Build image</span>
+					<input type="text" class="form-control" name="build_image" value="" placeholder="Build image" aria-label="Build image" aria-describedby="build_image">
+				</div>
+				<div class="input-group mb-2">
+					<span class="input-group-text" id="build_command" style="width: 200px;">Build command</span>
+					<input type="text" class="form-control" name="build_command" value="" placeholder="Build command" aria-label="Build command" aria-describedby="build_command">
+				</div>
+				<div class="d-flex flex-wrap justify-content-start mb-2 gap-2">
+					<div>
+						<div class="input-group flex-nowrap">
+							<span class="input-group-text" style="width: 100px;">Skip git</span>
+							<div class="input-group-text">
+								<input class="form-check-input mt-0" type="checkbox" name="skip_git" aria-label="Checkbox for skip git">
+							</div>
+						</div>
+					</div>
+					<div>
+						<div class="input-group flex-nowrap">
+							<span class="input-group-text" style="width: 100px;">Skip build</span>
+							<div class="input-group-text">
+								<input class="form-check-input mt-0" type="checkbox" name="skip_build" aria-label="Checkbox for skip build">
+							</div>
+						</div>
+					</div>
+					<div>
+						<div class="input-group flex-nowrap">
+							<span class="input-group-text" style="width: 100px;">Skip notify</span>
+							<div class="input-group-text">
+								<input class="form-check-input mt-0" type="checkbox" name="skip_notify" aria-label="Checkbox for skip notify">
+							</div>
+						</div>
+					</div>
+					<div>
+						<div class="input-group flex-nowrap">
+							<span class="input-group-text" style="width: 200px;">Set CHANGED_FILES to *</span>
+							<div class="input-group-text">
+								<input class="form-check-input mt-0" type="checkbox" name="rebuild_all" aria-label="Checkbox for set CHANGED_FILES to *">
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="d-flex align-items-center">
+				<div class="input-group">
+					<span class="input-group-text" id="hook" style="width: 100px;">Hook</span>
+					<input type="text" class="form-control" value="{{ hook }}" aria-label="Hook" aria-describedby="hook" disabled>
+					<input type="submit" value="Trigger" class="btn btn-primary">
+				</div>
+			</div>
+		</form>
 	</div>
-</form>
-</p>
+</div>
+
 <table class="table table-bordered fitted">
+	<colgroup>
+        <col style="width: 120px;">
+        <col style="width: 90px;">
+        <col>
+        <col>
+        <col>
+        <col>
+    </colgroup>
 	<tr>
-		<th></th>
-		<th>Request IP</th>
-		<th>Commit hash</th>
-		<th>Status</th>
-		<th>Created</th>
-		<th>Updated</th>
+		<th class="bg-body-tertiary"></th>
+		<th class="bg-body-tertiary">Status</th>
+		<th class="bg-body-tertiary">Created</th>
+		<th class="bg-body-tertiary">Updated</th>
+		<th class="bg-body-tertiary">Request IP</th>
+		<th class="bg-body-tertiary">Commit hash</th>
 	</tr>
 	{% for update in updates %}
-		<tr>
-			<td><button class="scroll-button">Scroll to end</button></td>
-			<td>{{ update.request_ip }}</td>
-			<td>{{ update.commit_hash|default:"-" }}</td>
-			<td>{{ update.status }}</td>
-			<td>{{ update.request_time }}</td>
-			<td>{% if update.updated_time %}{{ update.updated_time }}{% endif %}</td>
-		</tr>
-		{% if update.log %}
-			<tr>
-				<td colspan="6">
-					<pre>{{ update.log }}</pre>
-				</td>
-			</tr>
-		{% endif %}
+	<tr>
+		<td class="text-nowrap text-center align-top"><button class="scroll-button btn btn-secondary btn-sm">Scroll to end</button></td>
+		<td class="text-break {% if update.status == 'SUCCESS' %}bg-success-subtle{% elif update.status == 'FAILED' %}bg-danger-subtle{% elif update.status == 'SKIPPED' %}bg-warning-subtle{% else %}bg-info-subtle{% endif %}">{{ update.status }}</td>
+		<td>{{ update.request_time }}</td>
+		<td>{% if update.updated_time %}{{ update.updated_time }}{% else %}-{% endif %}</td>
+		<td class="text-break">{{ update.request_ip }}</td>
+		<td class="text-break">{{ update.commit_hash|default:"-" }}</td>
+	</tr>
+	{% if update.log %}
+	<tr>
+		<td colspan="6">
+			<pre class="log-pre bg-body-tertiary border border-1 rounded p-2">{{ update.log }}</pre>
+		</td>
+	</tr>
+	{% endif %}
 	{% endfor %}
 </table>
 <!-- A hacky way to add styles. Link it normally if there ever is enough static files

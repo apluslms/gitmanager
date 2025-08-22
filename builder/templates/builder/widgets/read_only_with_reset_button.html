@@ -1,3 +1,4 @@
-
-{% include "django/forms/widgets/input.html" %}
-<button type="submit" name="regenerate_secret">Regenerate (also saves the form)</button>
+<div class="input-group">
+    {% include "django/forms/widgets/input.html" %}
+    <button type="submit" name="regenerate_secret" class="btn btn-outline-secondary btn-sm">Regenerate (also saves the form)</button>
+</div>

@@ -7,8 +7,13 @@
 
 {% block body %}
 <form id="login-form">
-    Access token: <input type="text" name="token"></input>
-    <input type="submit" value="Login"></input>
+    <div class="d-flex align-items-center w-25" style="min-width: fit-content;">
+        <label for="token" class="text-nowrap me-2">Access token:</label>
+        <div class="input-group">
+            <input type="text" name="token" class="form-control"></input>
+            <input type="submit" value="Login" class="btn btn-primary">
+        </div>
+    </div>
 </form>
 <div id="error"></div>
 <script>

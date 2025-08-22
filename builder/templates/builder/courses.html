@@ -2,31 +2,36 @@
 
 {% block title %}{{ block.super }} :: Manager{% endblock %}
 
-{% block heading %}Cloned course repositories{% endblock %}
+{% block heading %}
+<div class="d-flex align-items-center">
+	<span>Cloned course repositories</span>
+	<a href="{% url 'index' %}" class="btn btn-outline-secondary text-nowrap mx-4 mt-2">Back to index</a>
+</div>
+{% endblock %}
 
 {% block body %}
-<div class="panel panel-default">
-  <div class="panel-heading">SSH key (add this as a deploy key to the course repository)</div>
-  <div class="panel-body" style="overflow-wrap: anywhere;">{{ ssh_key }}</div>
+<div class="card">
+  <div class="card-header">SSH key (add this as a deploy key to the course repository)</div>
+  <div class="card-body text-break">{{ ssh_key }}</div>
 </div>
-<hr/>
+<hr style="color: var(--bs-secondary-bg); opacity: 1.0;"/>
 <p>
-  <a href="{% url 'manager-edit' %}" class="btn btn-default btn-sm">Add new</a>
+  <a href="{% url 'manager-edit' %}" class="btn btn-primary">Add new</a>
 </p>
 <table class="table table-bordered">
   <tr>
-    <th>Updates</th>
-    <th>Origin</th>
-    <th>Branch</th>
-    <th>Hook</th>
-    <th>&nbsp;</th>
+    <th class="bg-body-tertiary">Updates</th>
+    <th class="bg-body-tertiary">Origin</th>
+    <th class="bg-body-tertiary">Branch</th>
+    <th class="bg-body-tertiary">Hook</th>
+    <th class="bg-body-tertiary"></th>
   {% for course in courses %}
   <tr>
-    <td><a href="{% url 'manager-updates' course.key %}">{{ course.key }}</a></td>
-    <td>{{ course.git_origin }}</td>
-    <td>{{ course.git_branch }}</td>
-    <td>{% if course.update_hook %}x{% endif %}</td>
-    <td><a href="{% url 'manager-edit' course.key %}" class="btn btn-default btn-sm">Edit</a></td>
+    <td class="align-middle"><a href="{% url 'manager-updates' course.key %}">{{ course.key }}</a></td>
+    <td class="align-middle text-break">{{ course.git_origin }}</td>
+    <td class="align-middle text-break">{{ course.git_branch }}</td>
+    <td class="align-middle text-center align-middle" style="width: 60px;">{% if course.update_hook %}✓{% endif %}</td>
+    <td class="align-middle text-center" style="width: 70px;"><a href="{% url 'manager-edit' course.key %}" class="btn btn-secondary btn-sm w-100">Edit</a></td>
   </tr>
   {% endfor %}
 </table>

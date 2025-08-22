@@ -1,8 +1,12 @@
-table.fitted th:not(:last-child) {
-    white-space: nowrap
+.table.fitted {
+  table-layout: fixed;
+  width: 100%;
 }
 
-table.fitted td:not(:last-child) {
-    width: 0px;
-    white-space: nowrap
+.table.fitted .log-pre {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: pre;
 }
