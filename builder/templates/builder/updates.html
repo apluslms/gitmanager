@@ -40,8 +40,8 @@
 			<span class="input-group-text" id="hooks_forward" style="width: 200px;">Hooks forward</span>
 			<input type="text" class="form-control" value="{{ course.update_hook }}" aria-label="Hooks forward" aria-describedby="hooks_forward" disabled>
 		</div>
-		<hr style="color: var(--bs-secondary-bg); opacity: 1.0;"/>
 		{% endif %}
+		<hr style="color: var(--bs-secondary-bg); opacity: 1.0;"/>
 		<form method="post" action="{% url 'manager-git-hook' course.key %}" class="form-inline">
 			<div>
 				<div class="input-group mb-2 mt-2">
