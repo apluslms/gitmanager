@@ -6,7 +6,7 @@ ARG GECKODRIVER_LINK=https://github.com/mozilla/geckodriver/releases/download/v$
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt update -y && apt install -y python3 python3-pip git gettext curl firefox docker.io rsync
+RUN apt update -y && apt install -y python3 python3-pip python3-setuptools git gettext curl firefox docker.io rsync
 
 # install python requirements
 COPY requirements.txt requirements.txt
