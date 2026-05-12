@@ -1,0 +1,202 @@
+name: Build and push Docker image
+
+on:
+  push:
+    tags:
+      - 'v[0-9]*'
+
+jobs:
+  prepare:
+    name: Determine base tag
+    runs-on: ubuntu-24.04
+    outputs:
+      base_full_tag: ${{ steps.tags.outputs.base_full_tag }}
+
+    steps:
+      - name: Determine base tag
+        id: tags
+        run: |
+          ref="${GITHUB_REF_NAME}"
+          if [[ "$ref" =~ ^v([0-9]+\.[0-9]+)\.[0-9]+$ ]]; then
+            minor="${BASH_REMATCH[1]}"
+            echo "base_full_tag=$minor" >> "$GITHUB_OUTPUT"
+          else
+            echo "base_full_tag=latest" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-base:
+    name: Build base image (${{ matrix.platform }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-24.04
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build and push platform-specific digest (no manifest tag yet)
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          platforms: ${{ matrix.platform }}
+          push: true
+          outputs: type=image,name=apluslms/run-gitmanager,push-by-digest=true,name-canonical=true
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: digest-base-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
+          path: /tmp/digests/*
+          retention-days: 1
+
+  merge-base:
+    name: Merge base manifests
+    runs-on: ubuntu-24.04
+    needs: build-base
+
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digest-base-*
+          merge-multiple: true
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Determine tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: apluslms/run-gitmanager
+          tags: |
+            type=raw,value=latest
+            type=match,pattern=v(\d+\.\d+)\.\d+$,group=1
+
+      - name: Create and push multi-arch manifest
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf 'apluslms/run-gitmanager@sha256:%s ' *)
+
+  build-huey:
+    name: Build huey image (${{ matrix.platform }})
+    runs-on: ${{ matrix.runner }}
+    needs:
+      - prepare
+      - merge-base
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-24.04
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build and push platform-specific digest (no manifest tag yet)
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.huey
+          platforms: ${{ matrix.platform }}
+          push: true
+          build-args: |
+            FULL_TAG=${{ needs.prepare.outputs.base_full_tag }}
+          outputs: type=image,name=apluslms/run-gitmanager,push-by-digest=true,name-canonical=true
+
+      - name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: digest-huey-${{ matrix.platform == 'linux/amd64' && 'amd64' || 'arm64' }}
+          path: /tmp/digests/*
+          retention-days: 1
+
+  merge-huey:
+    name: Merge huey manifests
+    runs-on: ubuntu-24.04
+    needs: build-huey
+
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digest-huey-*
+          merge-multiple: true
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Determine tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: apluslms/run-gitmanager
+          tags: |
+            type=raw,value=huey-latest
+            type=match,pattern=v(\d+\.\d+)\.\d+$,group=1,prefix=huey-
+
+      - name: Create and push multi-arch manifest
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf 'apluslms/run-gitmanager@sha256:%s ' *)
