@@ -209,7 +209,7 @@ def build_log_json(request, key):
 
 
 def get_client_ip(request):
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    x_forwarded_for = request.headers.get('x-forwarded-for')
     if x_forwarded_for:
         return x_forwarded_for.split(',')[0]
     return request.META.get('REMOTE_ADDR')
@@ -269,7 +269,7 @@ def hook(request: Request, key: str, **kwargs) -> HttpResponse:
         return HttpResponse(f"No access to course {key}", status=403)
     else:
         branch = None
-        if request.META.get('HTTP_X_GITLAB_EVENT'):
+        if request.headers.get('x-gitlab-event'):
             if course.webhook_secret is None:
                 logger.warning(f"webhook secret for course '{key}' is None. Skipping secret verification.")
             else:
@@ -281,7 +281,7 @@ def hook(request: Request, key: str, **kwargs) -> HttpResponse:
             data = get_post_data(request)
             if data:
                 branch = data.get('ref', '').rpartition("/")[2]
-        elif request.META.get('HTTP_X_GITHUB_EVENT'):
+        elif request.headers.get('x-github-event'):
             if course.webhook_secret is None:
                 logger.warning(f"webhook secret for course '{key}' is None. Skipping secret verification.")
             else:
@@ -325,7 +325,7 @@ def hook(request: Request, key: str, **kwargs) -> HttpResponse:
 
     push_event(key, **params)
 
-    if request.META.get('HTTP_REFERER'):
+    if request.headers.get('referer'):
         return redirect('manager-updates', course.key)
 
     return HttpResponse('ok')

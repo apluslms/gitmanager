@@ -1,4 +1,4 @@
-FROM --platform=$TARGETPLATFORM apluslms/service-base:django-1.18
+FROM apluslms/service-base:django-1.19
 
 # Set container related configuration via environment variables.
 ENV CONTAINER_TYPE="gitmanager" \
@@ -18,12 +18,13 @@ RUN : \
   # install docker-ce
  && if [ "$TARGETPLATFORM" = "linux/amd64" ] ; then ARCH=amd64 ; elif [ "$TARGETPLATFORM" = "linux/arm64" ] ; then ARCH=arm64 ; else exit 1 ; fi \
  && curl -LSs https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg >/dev/null 2>&1 \
- && echo "deb [arch=$ARCH signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian bullseye stable" > /etc/apt/sources.list.d/docker.list \
+ && echo "deb [arch=$ARCH signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian trixie stable" > /etc/apt/sources.list.d/docker.list \
  && apt_install docker-ce \
 \
   # create user
  && adduser --system --no-create-home --disabled-password --gecos "Git Manager webapp server,,," --home /srv/gitmanager --ingroup nogroup gitmanager \
  && mkdir /srv/gitmanager && chown gitmanager.nogroup /srv/gitmanager \
+ && git config --system --add safe.directory '/srv/courses/source/*' \
  && rm -rf /etc/init.d/ /tmp/* \
   # database settings that allow the Huey worker container to connect to the gitmanager web app's database
  && find /etc/postgresql/*/*/ -type f -name pg_hba.conf -exec sh -c 'echo "host all all samenet trust" >> "$1"' -- {} \; \
