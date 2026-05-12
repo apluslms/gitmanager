@@ -41,6 +41,24 @@ Undefined = object.__new__(UndefinedType)
 # Undefined object which would break "X is Undefined" checks
 undefined_field = Field(default_factory=lambda: Undefined)
 
+
+def get_namespace_annotations(namespace: Dict[str, Any]) -> Dict[str, Any]:
+    annotations = namespace.get("__annotations__")
+    if annotations:
+        return annotations
+
+    annotate_func = namespace.get("__annotate_func__")
+    if callable(annotate_func):
+        for format_value in (1, 0):
+            try:
+                annotations = annotate_func(format_value)
+            except (NotImplementedError, TypeError):
+                continue
+            if isinstance(annotations, dict):
+                return annotations
+
+    return {}
+
 class PydanticModelMeta(ModelMetaclass):
     """
     Pydantic ModelMetaclass but adds Undefined functionality:
@@ -53,8 +71,9 @@ class PydanticModelMeta(ModelMetaclass):
             namespace: Dict[str, Any],
             **kwargs: Any
             ) -> "PydanticModelMeta":
-        if "__annotations__" in namespace:
-            for attr, type in namespace["__annotations__"].items():
+        annotations = get_namespace_annotations(namespace)
+        if annotations:
+            for attr, type in annotations.items():
                 if attr in namespace:
                     continue
                 if type == UndefinedType:
