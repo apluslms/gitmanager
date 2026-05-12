@@ -3,6 +3,7 @@ from json.decoder import JSONDecodeError
 import logging
 import os.path
 from pathlib import Path
+import re
 from typing import Any, Dict, List, Optional, Tuple
 
 from aplus_auth.auth.django import Request
@@ -28,6 +29,7 @@ from util.misc import is_ajax
 
 
 logger = logging.getLogger("access.views")
+LOCAL_DEV_ORIGIN_RE = re.compile(r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$")
 
 
 @login_required
@@ -346,19 +348,33 @@ def publish(
 
 
 class LoginView(View):
+    @staticmethod
+    def _add_cors_headers(request: HttpRequest, response: HttpResponse) -> HttpResponse:
+        origin = request.headers.get("Origin")
+        if origin and settings.DEBUG and LOCAL_DEV_ORIGIN_RE.match(origin):
+            response["Access-Control-Allow-Origin"] = origin
+            response["Access-Control-Allow-Credentials"] = "true"
+            response["Access-Control-Allow-Headers"] = "Authorization, Content-Type"
+            response["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+            response.setdefault("Vary", "Origin")
+        return response
+
+    def options(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        return self._add_cors_headers(request, HttpResponse(status=204))
+
     def get(self, request):
         response = render(request, 'access/login.html')
         response.delete_cookie("AuthToken")
-        return response
+        return self._add_cors_headers(request, response)
 
     def post(self, request):
         if not hasattr(request, "user") or not request.user.is_authenticated:
-            return HttpResponse("Invalid token", status=401)
+            return self._add_cors_headers(request, HttpResponse("Invalid token", status=401))
         else:
             response = HttpResponse()
             # secure=not settings.DEBUG so that we do not need https when developing
             response.set_cookie("AuthToken", str(request.auth), secure=not settings.DEBUG, httponly=True)
-            return response
+            return self._add_cors_headers(request, response)
 
 
 def _get_course_exercise_lang(
