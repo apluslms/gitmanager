@@ -1,5 +1,5 @@
 ARG FULL_TAG=latest
-FROM --platform=$TARGETPLATFORM apluslms/run-gitmanager:$FULL_TAG
+FROM apluslms/run-gitmanager:$FULL_TAG
 
 ENV CONTAINER_TYPE="gitmanagerhuey" \
     GITMANAGER_LOCAL_SETTINGS="/srv/gitmanagerhuey-cont-settings.py" \
