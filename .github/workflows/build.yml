@@ -99,6 +99,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: apluslms/run-gitmanager
+          flavor: |
+            latest=false
           tags: |
             type=raw,value=latest
             type=match,pattern=v(\d+\.\d+)\.\d+$,group=1
@@ -190,6 +192,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: apluslms/run-gitmanager
+          flavor: |
+            latest=false
           tags: |
             type=raw,value=huey-latest
             type=match,pattern=v(\d+\.\d+)\.\d+$,group=1,prefix=huey-
